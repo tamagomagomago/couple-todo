@@ -43,13 +43,11 @@ const getBackgroundForTheme = (slot, variant) => {
 };
 
 const BACKGROUND_IMAGES = [
-  
-  { id: "day", src: "/shinjukueki.jpg", slot: "day" },
-  { id: "evening", src: "/takashimaya.jpg", slot: "evening" },
-  { id: "night", src: "/tokyo_tower_river.jpg", slot: "night" },
-  { id: "winter", src: "/Yuki_bench.jpg", slot: "morning" },
+  { id: "day", color: "linear-gradient(135deg, #1a1a2e, #16213e)", slot: "day" },
+  { id: "evening", color: "linear-gradient(135deg, #2d1b69, #11998e)", slot: "evening" },
+  { id: "night", color: "linear-gradient(135deg, #0f0c29, #302b63)", slot: "night" },
+  { id: "morning", color: "linear-gradient(135deg, #373b44, #4286f4)", slot: "morning" },
 ];
-
 function App() {
   const [tasks, setTasks] = useState([]);
   const [text, setText] = useState("");
@@ -538,7 +536,7 @@ function App() {
           style={{
             position: "fixed",
             inset: 0,
-            backgroundImage: `url(${img.src})`,
+            background: img.color,
             backgroundSize: "cover",
             backgroundPosition: "center",
             filter: "blur(8px) brightness(0.96)",
