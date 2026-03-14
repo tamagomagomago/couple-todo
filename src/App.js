@@ -538,7 +538,7 @@ function App() {
           style={{
             position: "fixed",
             inset: 0,
-            backgroundImage: `url(${img.src})`,
+            })`,
             backgroundSize: "cover",
             backgroundPosition: "center",
             filter: "blur(8px) brightness(0.96)",
