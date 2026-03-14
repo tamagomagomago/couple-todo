@@ -47,6 +47,7 @@ const BACKGROUND_IMAGES = [
   { id: "day", src: "/shinjukueki.jpg", slot: "day" },
   { id: "evening", src: "/takashimaya.jpg", slot: "evening" },
   { id: "night", src: "/tokyo_tower_river.jpg", slot: "night" },
+  { id: "winter", src: "/Yuki_bench.jpg", slot: "morning" },
 ];
 
 function App() {
