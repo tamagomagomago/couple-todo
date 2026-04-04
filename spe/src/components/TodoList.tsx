@@ -381,19 +381,23 @@ export default function TodoList({
   const [loading, setLoading] = useState(false);
 
   const fetchTodos = useCallback(async () => {
-    const [masterRes, todayRes] = await Promise.all([
-      fetch("/api/todos?is_today=false"),
-      fetch("/api/todos?is_today=true"),
-    ]);
-    const masterData = await masterRes.json();
-    const todayData = await todayRes.json();
-    if (Array.isArray(masterData)) setMasterTodos(masterData);
-    if (Array.isArray(todayData)) setTodayTodos(todayData);
+    try {
+      const [masterRes, todayRes] = await Promise.all([
+        fetch("/api/todos?is_today=false"),
+        fetch("/api/todos?is_today=true"),
+      ]);
+      const masterData = await masterRes.json();
+      const todayData = await todayRes.json();
+      if (Array.isArray(masterData)) setMasterTodos(masterData);
+      if (Array.isArray(todayData)) setTodayTodos(todayData);
+    } catch (e) {
+      console.error("fetchTodos error:", e);
+    }
   }, []);
 
   useEffect(() => {
     fetchTodos();
-  }, [fetchTodos]);
+  }, []);
 
   // フォーム送信
   const handleSubmit = async () => {
