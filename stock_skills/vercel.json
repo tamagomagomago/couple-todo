@@ -1,0 +1,4 @@
+{
+  "buildCommand": "cd web && npm install --legacy-peer-deps && npm run build",
+  "outputDirectory": "web/dist"
+}

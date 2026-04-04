@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.DS_Store
+data/cache/
+data/analysis/
+data/snapshots/
+web/node_modules/
+web/dist/
+.vercel/
+.vercel

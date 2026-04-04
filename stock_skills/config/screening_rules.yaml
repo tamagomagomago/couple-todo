@@ -1,0 +1,85 @@
+# スクリーニング閾値設定
+# この設定ファイルで各プリセットの閾値を変更できます
+
+# --- プリセット1: 新高値ブレイク ---
+new_high_breakout:
+  # 52週高値の何%以上を「高値圏」とするか
+  price_to_52w_high_ratio: 0.95
+  # 出来高が20日平均の何倍以上か
+  volume_ratio_threshold: 1.5
+  # 最低時価総額（日本株: 円、米国株: ドル）
+  min_market_cap_jp: 10_000_000_000   # 100億円
+  min_market_cap_us: 1_000_000_000    # 10億ドル
+  # 対象市場
+  markets:
+    japan:
+      - "プライム"
+      - "グロース"
+    us:
+      - "NASDAQ"
+      - "NYSE"
+
+# --- プリセット2: 押し目買い ---
+dip_buying:
+  # RSI範囲
+  rsi_min: 30
+  rsi_max: 45
+  # 移動平均線の上にあること（日数）
+  above_ma_days: 200
+  # PER範囲
+  per_min: 5
+  per_max: 30
+  # 最低配当利回り（日本株のみ）
+  min_dividend_yield_jp: 0.01   # 1%
+  # バリュースコア配点
+  value_score_weights:
+    per: 25
+    pbr: 25
+    dividend_yield: 20
+    roe: 15
+    revenue_growth: 15
+
+# --- プリセット3: AI関連成長株 ---
+ai_growth:
+  # 対象セクター・キーワード
+  target_sectors:
+    - "Technology"
+    - "Semiconductors"
+    - "Software"
+    - "Cloud"
+  target_keywords:
+    - "AI"
+    - "artificial intelligence"
+    - "semiconductor"
+    - "cloud"
+    - "machine learning"
+    - "data center"
+  # 売上成長率の閾値
+  min_revenue_growth: 0.15    # 15%
+  # 粗利率の閾値
+  min_gross_margin: 0.50      # 50%
+  # バリュースコア配点（成長重視）
+  value_score_weights:
+    per: 10
+    pbr: 10
+    revenue_growth: 35
+    gross_margin: 30
+    roe: 15
+
+# --- 異常値除外ルール ---
+anomaly_filters:
+  # 配当利回りが以下を超えたら除外
+  max_dividend_yield: 0.15    # 15%
+  # PBRが以下未満なら除外
+  min_pbr: 0.1
+  # アナリスト数が少ない場合のスプレッド拡張閾値
+  min_analysts_for_normal_spread: 3
+
+# --- キャッシュ設定 ---
+cache:
+  ttl_hours: 24
+
+# --- API設定 ---
+api:
+  # APIコール間のディレイ（秒）
+  delay_seconds: 1

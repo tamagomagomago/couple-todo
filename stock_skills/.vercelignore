@@ -1,0 +1,14 @@
+# Python バックエンドは除外（ローカルPC + ngrok で運用するため）
+api/
+core/
+data/
+config/
+requirements.txt
+main.py
+*.py
+
+# 不要ファイル
+**/__pycache__/
+**/*.pyc
+**/.DS_Store
+web/node_modules/
