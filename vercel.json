@@ -1,8 +1,6 @@
 {
-  "builds": [
-    {
-      "src": "spe/package.json",
-      "use": "@vercel/next"
-    }
-  ]
+  "buildCommand": "cd spe && npm run build",
+  "installCommand": "cd spe && npm install",
+  "framework": "nextjs",
+  "outputDirectory": "spe/.next"
 }
