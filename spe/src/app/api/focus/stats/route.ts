@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const user_id = searchParams.get("user_id");
-    const period = searchParams.get("period") || "week"; // 'week' or 'month'
+    const period = searchParams.get("period") || "week"; // 'week', 'month', or 'year'
 
     if (!user_id) {
       return NextResponse.json(
@@ -20,7 +20,9 @@ export async function GET(request: NextRequest) {
     const now = new Date();
     let startDate: Date;
 
-    if (period === "month") {
+    if (period === "year") {
+      startDate = new Date(now.getFullYear(), 0, 1);
+    } else if (period === "month") {
       startDate = new Date(now.getFullYear(), now.getMonth(), 1);
     } else {
       // Default to week (last 7 days)

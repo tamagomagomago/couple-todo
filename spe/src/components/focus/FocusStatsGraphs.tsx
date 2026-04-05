@@ -5,7 +5,7 @@ import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, L
 
 interface FocusStatsGraphsProps {
   userId: string;
-  period?: "week" | "month";
+  period?: "week" | "month" | "year";
 }
 
 interface StatsData {
@@ -18,7 +18,7 @@ interface StatsData {
 export default function FocusStatsGraphs({ userId, period = "week" }: FocusStatsGraphsProps) {
   const [stats, setStats] = useState<StatsData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [currentPeriod, setCurrentPeriod] = useState<"week" | "month">(period);
+  const [currentPeriod, setCurrentPeriod] = useState<"week" | "month" | "year">(period);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -48,8 +48,16 @@ export default function FocusStatsGraphs({ userId, period = "week" }: FocusStats
   // Format daily data for line chart
   const dailyData = Object.entries(stats.daily_breakdown).map(([date, minutes]) => {
     const dateObj = new Date(date + "T00:00:00");
+    let dateLabel: string;
+
+    if (currentPeriod === "year") {
+      dateLabel = dateObj.toLocaleDateString("ja-JP", { month: "2-digit" });
+    } else {
+      dateLabel = dateObj.toLocaleDateString("ja-JP", { month: "short", day: "numeric" });
+    }
+
     return {
-      date: dateObj.toLocaleDateString("ja-JP", { month: "short", day: "numeric" }),
+      date: dateLabel,
       時間: Math.round(minutes / 60 * 10) / 10, // Convert to hours
       minutes,
     };
@@ -89,6 +97,16 @@ export default function FocusStatsGraphs({ userId, period = "week" }: FocusStats
           >
             月間
           </button>
+          <button
+            onClick={() => setCurrentPeriod("year")}
+            className={`px-3 py-1 rounded text-sm transition-colors ${
+              currentPeriod === "year"
+                ? "bg-blue-600 text-white"
+                : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+            }`}
+          >
+            年間
+          </button>
         </div>
       </div>
 
@@ -102,7 +120,9 @@ export default function FocusStatsGraphs({ userId, period = "week" }: FocusStats
       {/* Daily Line Chart */}
       {dailyData.length > 0 && (
         <div className="mb-6">
-          <h4 className="text-sm font-medium text-gray-300 mb-3">日別トレンド</h4>
+          <h4 className="text-sm font-medium text-gray-300 mb-3">
+            {currentPeriod === "year" ? "月別トレンド" : "日別トレンド"}
+          </h4>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={dailyData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#4b5563" />
@@ -127,9 +147,9 @@ export default function FocusStatsGraphs({ userId, period = "week" }: FocusStats
       {/* Mode Breakdown Bar Chart */}
       {modeData.length > 0 && (
         <div>
-          <h4 className="text-sm font-medium text-gray-300 mb-3">モード別内訳</h4>
+          <h4 className="text-sm font-medium text-gray-300 mb-3">テーマ別集計</h4>
           <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={modeData}>
+            <BarChart data={modeData.sort((a, b) => b.minutes - a.minutes)}>
               <CartesianGrid strokeDasharray="3 3" stroke="#4b5563" />
               <XAxis dataKey="mode" stroke="#9ca3af" />
               <YAxis stroke="#9ca3af" label={{ value: "時間", angle: -90, position: "insideLeft" }} />
@@ -140,6 +160,21 @@ export default function FocusStatsGraphs({ userId, period = "week" }: FocusStats
               <Bar dataKey="時間" fill="#3b82f6" />
             </BarChart>
           </ResponsiveContainer>
+
+          {/* Theme Breakdown Details */}
+          <div className="mt-4 space-y-2">
+            {modeData.sort((a, b) => b.minutes - a.minutes).map((mode) => {
+              const percentage = stats.total_minutes > 0 ? Math.round((mode.minutes / stats.total_minutes) * 100) : 0;
+              return (
+                <div key={mode.mode} className="flex justify-between items-center p-2 bg-gray-700 rounded text-sm">
+                  <span className="text-gray-300">{mode.mode}</span>
+                  <span className="text-gray-400">
+                    {mode.時間}時間 <span className="text-blue-400">({percentage}%)</span>
+                  </span>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>
