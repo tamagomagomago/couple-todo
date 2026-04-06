@@ -352,6 +352,10 @@ export default function TodoList() {
   const [form, setForm] = useState<CreateTodoInput>(emptyForm());
   const [editId, setEditId] = useState<number | null>(null);
   const [customCat, setCustomCat] = useState(false);
+  const [showWeeklyList, setShowWeeklyList] = useState(true);
+  const [showTodayAddForm, setShowTodayAddForm] = useState(false);
+  const [todayFormCat, setTodayFormCat] = useState<string>("personal");
+  const [todayFormCustomCat, setTodayFormCustomCat] = useState(false);
 
   // AI生成
   const [aiPrompt, setAiPrompt] = useState("");
@@ -640,13 +644,23 @@ export default function TodoList() {
 
       {/* 2カラムレイアウト（横スクロール対応） */}
       <div className="flex gap-0 overflow-x-auto">
-        {/* ===== 左：マスターリスト ===== */}
+        {/* ===== 左：今週のTODO ===== */}
+        {showWeeklyList && (
         <div className="flex-shrink-0 w-72 sm:w-80 border-r border-gray-800 flex flex-col">
           <div className="px-3 py-2 bg-gray-850 border-b border-gray-800 flex items-center justify-between">
-            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-              マスターリスト
-            </span>
-            <span className="text-xs text-gray-600">{masterTodos.length}件</span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                📅 今週のTODO
+              </span>
+              <span className="text-xs text-gray-600">{masterTodos.length}件</span>
+            </div>
+            <button
+              onClick={() => setShowWeeklyList(false)}
+              className="text-xs text-gray-600 hover:text-red-400 transition-colors p-0.5"
+              title="今週のTODOを非表示"
+            >
+              ▶
+            </button>
           </div>
 
           <div className="px-3 py-2 space-y-2">
@@ -896,14 +910,26 @@ export default function TodoList() {
             )}
           </div>
         </div>
+        )}
 
         {/* ===== 右：今日のTODO ===== */}
-        <div className="flex-shrink-0 w-72 sm:w-80 flex flex-col">
+        <div className={`flex-shrink-0 ${showWeeklyList ? 'w-72 sm:w-80' : 'w-full'} flex flex-col transition-all duration-200`}>
           <div className="px-3 py-2 border-b border-gray-800">
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                今日のTODO
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  📅 今日のTODO
+                </span>
+                {!showWeeklyList && (
+                  <button
+                    onClick={() => setShowWeeklyList(true)}
+                    className="text-xs text-gray-600 hover:text-blue-400 transition-colors border border-gray-700 hover:border-blue-700 px-1.5 py-0.5 rounded"
+                    title="今週のTODOを表示"
+                  >
+                    ◀ 今週
+                  </button>
+                )}
+              </div>
               <div className="flex items-center gap-2">
                 <span className="text-xs text-gray-400">
                   {completedToday}/{todayTodos.length}件
@@ -912,11 +938,14 @@ export default function TodoList() {
                   <button
                     onClick={handleResetTodayTodos}
                     className="text-xs text-gray-600 hover:text-amber-400 transition-colors border border-gray-700 hover:border-amber-700 px-1.5 py-0.5 rounded"
-                    title="今日のTODOを全てマスターリストに戻す"
+                    title="今日のTODOを全て今週のリストに戻す"
                   >
                     🔄 全て戻す
                   </button>
                 )}
+                <Link href="/focus" title="集中モード">
+                  <FocusButton onClick={() => {}} />
+                </Link>
               </div>
             </div>
             {/* 進捗バー */}
@@ -968,18 +997,161 @@ export default function TodoList() {
             );
           })()}
 
-          {/* 集中を始めるボタン */}
-          <div className="px-3 py-2">
-            <Link href="/focus" className="block">
-              <FocusButton onClick={() => {}} />
-            </Link>
+          {/* 今日のTODO追加フォーム */}
+          <div className="px-3 py-2 border-b border-gray-800">
+            <button
+              onClick={() => {
+                setTodayFormCat("personal");
+                setTodayFormCustomCat(false);
+                setShowTodayAddForm((v) => !v);
+              }}
+              className="w-full py-1.5 rounded-lg bg-gray-700 hover:bg-gray-600 text-gray-300 text-xs font-medium transition-colors"
+            >
+              {showTodayAddForm ? "▲ 閉じる" : "+ 今日のタスク追加"}
+            </button>
+
+            {showTodayAddForm && (
+              <div className="bg-gray-800 rounded-xl p-3 space-y-2 border border-gray-600 mt-2">
+                <p className="text-xs text-gray-400 font-semibold">
+                  タスク追加
+                </p>
+                <input
+                  placeholder="タイトル *"
+                  value={form.title}
+                  onChange={(e) => setForm({ ...form, title: e.target.value })}
+                  className="w-full bg-gray-700 text-gray-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-green-500"
+                />
+                <div>
+                  <label className="text-xs text-gray-500 mb-0.5 block">優先度</label>
+                  <div className="flex gap-1">
+                    {[
+                      { label: "🐸 高", val: 1, active: "border-red-500 bg-red-900/50 text-red-300" },
+                      { label: "中",    val: 3, active: "border-yellow-500 bg-yellow-900/50 text-yellow-300" },
+                      { label: "低",    val: 5, active: "border-green-500 bg-green-900/50 text-green-300" },
+                    ].map((p) => (
+                      <button
+                        key={p.val}
+                        type="button"
+                        onClick={() => setForm({ ...form, priority: p.val })}
+                        className={`flex-1 py-1.5 rounded border text-xs font-medium transition-colors ${
+                          form.priority === p.val
+                            ? p.active
+                            : "border-gray-600 bg-gray-700 text-gray-400 hover:border-gray-500"
+                        }`}
+                      >
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500 mb-0.5 block">見積(分)</label>
+                  <input
+                    type="number"
+                    value={form.estimated_minutes}
+                    onChange={(e) => setForm({ ...form, estimated_minutes: Number(e.target.value) })}
+                    min={5}
+                    step={5}
+                    className="w-full bg-gray-700 text-gray-200 rounded px-2 py-1.5 text-xs focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500 mb-0.5 block">カテゴリ</label>
+                  <div className="flex gap-1">
+                    {!todayFormCustomCat ? (
+                      <select
+                        value={form.category}
+                        onChange={(e) => setForm({ ...form, category: e.target.value })}
+                        className="flex-1 bg-gray-700 text-gray-200 rounded px-2 py-1.5 text-xs focus:outline-none"
+                      >
+                        {PRESET_CATEGORIES.map((c) => (
+                          <option key={c} value={c}>{getCatEmoji(c)} {c}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        value={form.category}
+                        onChange={(e) => setForm({ ...form, category: e.target.value })}
+                        placeholder="カテゴリ名を入力"
+                        className="flex-1 bg-gray-700 text-gray-200 rounded px-2 py-1.5 text-xs focus:outline-none"
+                      />
+                    )}
+                    <button
+                      onClick={() => {
+                        setTodayFormCustomCat((v) => !v);
+                        setForm({ ...form, category: "personal" });
+                      }}
+                      className="text-xs text-gray-500 hover:text-gray-300 px-1.5"
+                    >
+                      {todayFormCustomCat ? "選択" : "自由入力"}
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500 mb-0.5 block">優先時間帯（任意）</label>
+                  <div className="flex gap-1">
+                    {TIME_PREF_OPTIONS.map(opt => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setForm({ ...form, preferred_time: form.preferred_time === opt.value ? undefined : opt.value })}
+                        className={`flex-1 py-1 rounded border text-xs transition-colors ${
+                          form.preferred_time === opt.value
+                            ? "border-blue-500 bg-blue-900/50 text-blue-300"
+                            : "border-gray-600 bg-gray-700 text-gray-400 hover:border-gray-500"
+                        }`}
+                      >
+                        {opt.emoji} {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={async () => {
+                      if (!form.title.trim()) return;
+                      setLoading(true);
+                      try {
+                        const res = await fetch("/api/todos", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ ...form, is_today: true }),
+                        });
+                        if (res.ok) {
+                          await fetchTodos();
+                          setShowTodayAddForm(false);
+                          setForm(emptyForm());
+                          setTodayFormCustomCat(false);
+                        }
+                      } finally {
+                        setLoading(false);
+                      }
+                    }}
+                    disabled={loading}
+                    className="flex-1 py-1.5 bg-green-700 hover:bg-green-600 text-white rounded text-xs font-medium transition-colors disabled:opacity-50"
+                  >
+                    {loading ? "保存中..." : "追加"}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowTodayAddForm(false);
+                      setForm(emptyForm());
+                      setTodayFormCustomCat(false);
+                    }}
+                    className="flex-1 py-1.5 bg-gray-700 text-gray-300 rounded text-xs transition-colors hover:bg-gray-600"
+                  >
+                    キャンセル
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="px-3 py-2 flex-1">
             {todayTodos.length === 0 ? (
               <div className="text-center py-6">
                 <p className="text-gray-600 text-xs">今日のTODOがありません</p>
-                <p className="text-gray-700 text-xs mt-1">← 左のリストから「今日へ」で追加</p>
+                <p className="text-gray-700 text-xs mt-1">{showWeeklyList ? '← 左のリストから「今日へ」で追加' : '↑ 上の「タスク追加」で作成'}</p>
               </div>
             ) : (
               <>
