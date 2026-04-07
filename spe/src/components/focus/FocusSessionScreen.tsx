@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from "react";
 import { FocusMode, FocusSession, Todo } from "@/types";
 import FocusTimerDisplay from "./FocusTimerDisplay";
 import FocusModeSelector from "./FocusModeSelector";
-import FocusTaskSelector from "./FocusTaskSelector";
 
 type SessionState = "setup" | "active" | "completed" | "break";
 
@@ -242,13 +241,21 @@ export default function FocusSessionScreen({ userId, onClose }: FocusSessionScre
               }}
             />
 
-            {/* Task Selection */}
-            <div className="mt-6">
-              <FocusTaskSelector
-                onTaskSelect={setSelectedTask}
-                selectedTask={selectedTask}
-              />
-            </div>
+            {/* Selected Task Display */}
+            {selectedTask ? (
+              <div className="mt-6 bg-blue-600/20 border-2 border-blue-500 rounded-lg p-3">
+                <p className="text-xs text-blue-300 mb-1">🎯 シングルフォーカス対象</p>
+                <p className="text-sm font-semibold text-blue-100 truncate">
+                  {selectedTask.title}
+                </p>
+              </div>
+            ) : (
+              <div className="mt-6 bg-gray-800/50 border border-gray-700 rounded-lg p-3">
+                <p className="text-xs text-gray-500">
+                  TODOで🎯を押して、シングルフォーカス対象を設定できます
+                </p>
+              </div>
+            )}
 
             {/* Time Selection */}
             <div className="mt-6">
