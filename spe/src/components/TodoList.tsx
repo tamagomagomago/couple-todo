@@ -2,8 +2,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Todo, CreateTodoInput, GeneratedTodo, PreferredTime } from "@/types";
-import Link from "next/link";
-import FocusButton from "./focus/FocusButton";
 
 // 優先度ラベル→数値
 const PRIORITY_TO_NUM: Record<string, number> = { 高: 1, 中: 3, 低: 5 };
@@ -88,7 +86,18 @@ function emptyForm(): CreateTodoInput {
     estimated_minutes: 30,
     category: "personal",
     is_today: false,
+    due_date: undefined,
   };
+}
+
+// 期限警告判定：今日から2日以内か
+function isDeadlineSoon(dueDate: string | null | undefined): boolean {
+  if (!dueDate) return false;
+  const due = new Date(dueDate);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const daysLeft = Math.floor((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  return daysLeft >= 0 && daysLeft <= 2;
 }
 
 // ミニTODOカード（マスターリスト用）
@@ -113,8 +122,11 @@ function MasterTodoCard({
   };
 
   const priorityLabel = numToLabel(todo.priority);
+  const hasDeadlineSoon = isDeadlineSoon(todo.due_date);
+  const borderClass = hasDeadlineSoon ? "border-red-600 bg-red-950/30" : "border-gray-700 bg-gray-800";
+
   return (
-    <div className="bg-gray-800 border border-gray-700 rounded-lg p-2.5 hover:border-gray-600 transition-colors">
+    <div className={`${borderClass} rounded-lg p-2.5 hover:border-gray-600 transition-colors border`}>
       <div className="flex items-start gap-2">
         <div className="flex-1 min-w-0">
           <p className="text-gray-200 text-sm font-medium leading-tight break-words">
@@ -128,6 +140,11 @@ function MasterTodoCard({
               {getCatEmoji(todo.category)} {todo.category}
             </span>
             <span className="text-gray-500 text-xs">⏱{todo.estimated_minutes}分</span>
+            {todo.due_date && (
+              <span className={`text-xs px-1.5 py-0.5 rounded ${hasDeadlineSoon ? "bg-red-900/60 text-red-300 border border-red-700" : "bg-purple-900/60 text-purple-300 border border-purple-700"}`}>
+                📅 {new Date(todo.due_date).toLocaleDateString("ja-JP", { month: "numeric", day: "numeric" })}
+              </span>
+            )}
           </div>
         </div>
         <div className="flex flex-col gap-1 shrink-0">
@@ -356,6 +373,8 @@ export default function TodoList() {
   const [showTodayAddForm, setShowTodayAddForm] = useState(false);
   const [todayFormCat, setTodayFormCat] = useState<string>("personal");
   const [todayFormCustomCat, setTodayFormCustomCat] = useState(false);
+  const [currentTab, setCurrentTab] = useState<"weekly" | "today">("weekly");
+  const [sortByDue, setSortByDue] = useState(false);
 
   // AI生成
   const [aiPrompt, setAiPrompt] = useState("");
@@ -466,6 +485,7 @@ export default function TodoList() {
       estimated_minutes: todo.estimated_minutes,
       category: todo.category,
       preferred_time: todo.preferred_time ?? undefined,
+      due_date: todo.due_date ?? undefined,
     });
     setShowAddForm(true);
   };
@@ -636,34 +656,65 @@ export default function TodoList() {
   return (
     <div className="bg-gray-900 border border-gray-700 rounded-xl overflow-hidden">
       <div className="px-4 py-3 border-b border-gray-800">
-        <div className="flex items-center gap-2">
-          <span className="text-green-400 text-lg">✅</span>
-          <span className="font-semibold text-gray-200">TODO</span>
+        <div className="flex items-center justify-between gap-2 mb-3">
+          <div className="flex items-center gap-2">
+            <span className="text-green-400 text-lg">✅</span>
+            <span className="font-semibold text-gray-200">TODO</span>
+          </div>
+        </div>
+
+        {/* タブ */}
+        <div className="flex gap-2">
+          <button
+            onClick={() => setCurrentTab("weekly")}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+              currentTab === "weekly"
+                ? "bg-blue-700 text-white border border-blue-600"
+                : "bg-gray-700 text-gray-300 border border-gray-600 hover:bg-gray-600"
+            }`}
+          >
+            📅 今週のTODO ({masterTodos.filter(t => !t.is_completed).length}件)
+          </button>
+          <button
+            onClick={() => setCurrentTab("today")}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+              currentTab === "today"
+                ? "bg-blue-700 text-white border border-blue-600"
+                : "bg-gray-700 text-gray-300 border border-gray-600 hover:bg-gray-600"
+            }`}
+          >
+            📅 今日のTODO ({todayTodos.filter(t => !t.is_completed).length}件)
+          </button>
         </div>
       </div>
 
-      {/* 2カラムレイアウト（横スクロール対応） */}
-      <div className="flex gap-0 overflow-x-auto">
-        {/* ===== 左：今週のTODO ===== */}
-        {showWeeklyList && (
-        <div className="flex-shrink-0 w-72 sm:w-80 border-r border-gray-800 flex flex-col">
-          <div className="px-3 py-2 bg-gray-850 border-b border-gray-800 flex items-center justify-between">
+      {/* タブコンテンツ */}
+      <div className="overflow-y-auto" style={{ maxHeight: "calc(100vh - 180px)" }}>
+        {/* ===== 今週のTODO タブ ===== */}
+        {currentTab === "weekly" && (
+        <div className="flex flex-col h-full">
+          <div className="px-3 py-2 border-b border-gray-800">
             <div className="flex items-center gap-2">
               <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                📅 今週のTODO
+                今週のタスク
               </span>
-              <span className="text-xs text-gray-600">{masterTodos.length}件</span>
+              <span className="text-xs text-gray-600">({masterTodos.filter(t => !t.is_completed).length}件)</span>
             </div>
-            <button
-              onClick={() => setShowWeeklyList(false)}
-              className="text-xs text-gray-600 hover:text-red-400 transition-colors p-0.5"
-              title="今週のTODOを非表示"
-            >
-              ▶
-            </button>
           </div>
 
           <div className="px-3 py-2 space-y-2">
+            {/* ソートボタン */}
+            <button
+              onClick={() => setSortByDue(!sortByDue)}
+              className={`w-full py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                sortByDue
+                  ? "bg-purple-900/60 text-purple-300 border-purple-700"
+                  : "bg-gray-700 text-gray-300 border-gray-600 hover:bg-gray-600"
+              }`}
+            >
+              {sortByDue ? "📅 期限の近い順" : "通常の順"}
+            </button>
+
             {/* AI生成ボタン */}
             <button
               onClick={() => {
@@ -829,6 +880,15 @@ export default function TodoList() {
                     ))}
                   </div>
                 </div>
+                <div>
+                  <label className="text-xs text-gray-500 mb-0.5 block">期限（任意）</label>
+                  <input
+                    type="date"
+                    value={form.due_date || ""}
+                    onChange={(e) => setForm({ ...form, due_date: e.target.value || undefined })}
+                    className="w-full bg-gray-700 text-gray-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-purple-500"
+                  />
+                </div>
                 <div className="flex gap-2">
                   <button
                     onClick={handleSubmit}
@@ -862,6 +922,14 @@ export default function TodoList() {
             ) : (
               masterTodos
                 .filter((t) => !t.is_completed)
+                .sort((a, b) => {
+                  if (!sortByDue) return 0; // 通常順
+                  // 期限でソート：期限ありを上に、期限なしを下に
+                  if (!a.due_date && !b.due_date) return 0;
+                  if (!a.due_date) return 1;
+                  if (!b.due_date) return -1;
+                  return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
+                })
                 .map((todo) => (
                   <MasterTodoCard
                     key={todo.id}
@@ -912,23 +980,15 @@ export default function TodoList() {
         </div>
         )}
 
-        {/* ===== 右：今日のTODO ===== */}
-        <div className={`flex-shrink-0 ${showWeeklyList ? 'w-72 sm:w-80' : 'w-full'} flex flex-col transition-all duration-200`}>
+        {/* ===== 今日のTODO タブ ===== */}
+        {currentTab === "today" && (
+        <div className="flex flex-col h-full">
           <div className="px-3 py-2 border-b border-gray-800">
             <div className="flex items-center justify-between mb-1.5">
               <div className="flex items-center gap-2">
                 <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                  📅 今日のTODO
+                  今日のタスク
                 </span>
-                {!showWeeklyList && (
-                  <button
-                    onClick={() => setShowWeeklyList(true)}
-                    className="text-xs text-gray-600 hover:text-blue-400 transition-colors border border-gray-700 hover:border-blue-700 px-1.5 py-0.5 rounded"
-                    title="今週のTODOを表示"
-                  >
-                    ◀ 今週
-                  </button>
-                )}
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-xs text-gray-400">
@@ -943,9 +1003,6 @@ export default function TodoList() {
                     🔄 全て戻す
                   </button>
                 )}
-                <Link href="/focus" title="集中モード">
-                  <FocusButton onClick={() => {}} />
-                </Link>
               </div>
             </div>
             {/* 進捗バー */}
@@ -1234,6 +1291,7 @@ export default function TodoList() {
             )}
           </div>
         </div>
+        )}
       </div>
     </div>
   );

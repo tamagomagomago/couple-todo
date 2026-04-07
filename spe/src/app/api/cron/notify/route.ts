@@ -94,6 +94,17 @@ export async function GET(request: NextRequest) {
   const jstNow = new Date(new Date().getTime() + 9 * 60 * 60 * 1000);
   const jstMinutes = jstNow.getUTCHours() * 60 + jstNow.getUTCMinutes();
   const todayStr = jstNow.toISOString().split("T")[0];
+  const todayStart = new Date(`${todayStr}T00:00:00Z`);
+
+  // 前日以前に更新された is_today フラグをリセット（日付変わり時の自動リセット）
+  const { data: allTodosReset } = await supabase.from("todos").select("*").eq("is_today", true);
+  const todosToReset = allTodosReset?.filter((t) => {
+    const updatedDate = t.updated_at ? new Date(t.updated_at) : null;
+    return updatedDate && updatedDate < todayStart;
+  }) ?? [];
+  for (const todo of todosToReset) {
+    await supabase.from("todos").update({ is_today: false }).eq("id", todo.id);
+  }
 
   // todos 取得
   const { data: allTodos } = await supabase.from("todos").select("*");

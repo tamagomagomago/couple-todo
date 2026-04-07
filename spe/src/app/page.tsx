@@ -1,14 +1,15 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import Link from "next/link";
 import { DayType, Todo } from "@/types";
 import DayTypeSelector from "@/components/DayTypeSelector";
 import GoalPanel from "@/components/GoalPanel";
 import DailyTimeline from "@/components/DailyTimeline";
 import TodoList from "@/components/TodoList";
 import WeatherPanel from "@/components/WeatherPanel";
-import NotifyPanel from "@/components/NotifyPanel";
 import HowToPanel from "@/components/HowToPanel";
+import FocusButton from "@/components/focus/FocusButton";
 import WeeklyReviewPanel from "@/components/WeeklyReviewPanel";
 import VisionBoard from "@/components/VisionBoard";
 import TodayMission from "@/components/TodayMission";
@@ -238,6 +239,20 @@ export default function Home() {
         {/* WeeklyReviewPanel（日曜以外は通常位置） */}
         {!isReviewDay && <WeeklyReviewPanel />}
 
+        {/* 集中を始める - 独立セクション */}
+        <div className="bg-gray-900 border border-gray-700 rounded-xl p-4">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">⏱</span>
+            <div className="flex-1">
+              <p className="text-gray-200 font-semibold">深く集中する</p>
+              <p className="text-xs text-gray-500">集中モードで不要な干渉を排除</p>
+            </div>
+            <Link href="/focus" title="集中モード">
+              <FocusButton onClick={() => {}} />
+            </Link>
+          </div>
+        </div>
+
         {/* TODO + タイムライン ← スクロール対象（日中） */}
         <div ref={todoRef} className="grid grid-cols-1 xl:grid-cols-2 gap-4">
           <TodoList />
@@ -247,11 +262,8 @@ export default function Home() {
         {/* 時間記録・統計 */}
         <TimeStatsPanel />
 
-        {/* 天気 + 通知設定 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <WeatherPanel city="Tokyo" />
-          <NotifyPanel />
-        </div>
+        {/* 天気 */}
+        <WeatherPanel city="Tokyo" />
       </div>
     </main>
   );
