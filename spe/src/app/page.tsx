@@ -219,35 +219,7 @@ export default function Home() {
       {/* メインコンテンツ */}
       <div className="max-w-7xl mx-auto px-4 py-4 space-y-4 pb-20">
 
-        {/* 日曜日：週次レビューを最上部に強調表示 */}
-        {isReviewDay && <WeeklyReviewPanel featured={true} />}
-
-        {/* ビジョンボード */}
-        <VisionBoard />
-
-        {/* 使い方ガイド */}
-        <HowToPanel />
-
-        {/* DayTypeSelector + 起床時刻 */}
-        <DayTypeSelector
-          value={dayType}
-          onChange={handleDayTypeChange}
-          date={date}
-          onDateChange={setDate}
-          wakeTime={wakeTime}
-          onWakeTimeChange={handleWakeTimeChange}
-        />
-
-        {/* アクティブタイマー（実行中のみ表示） */}
-        {activeTimer && (
-          <TodoTimer
-            timer={activeTimer}
-            onComplete={(sec) => handleStopTimer(sec, true)}
-            onStop={(sec) => handleStopTimer(sec, false)}
-          />
-        )}
-
-        {/* タブナビゲーション */}
+        {/* タブナビゲーション - 最上部 */}
         <div className="flex gap-2 border-b border-gray-700 mb-6">
           <button
             onClick={() => setCurrentTab("todo")}
@@ -271,15 +243,28 @@ export default function Home() {
           </button>
         </div>
 
+        {/* DayTypeSelector + 起床時刻 */}
+        <DayTypeSelector
+          value={dayType}
+          onChange={handleDayTypeChange}
+          date={date}
+          onDateChange={setDate}
+          wakeTime={wakeTime}
+          onWakeTimeChange={handleWakeTimeChange}
+        />
+
+        {/* アクティブタイマー（実行中のみ表示） */}
+        {activeTimer && (
+          <TodoTimer
+            timer={activeTimer}
+            onComplete={(sec) => handleStopTimer(sec, true)}
+            onStop={(sec) => handleStopTimer(sec, false)}
+          />
+        )}
+
         {/* ===== TODO & 集中 タブ ===== */}
         {currentTab === "todo" && (
           <>
-            {/* Today's Mission */}
-            <TodayMission
-              onStartTimer={handleStartTimer}
-              activeTimerTodoId={activeTimer?.todoId ?? null}
-            />
-
             {/* 集中を始める - 独立セクション */}
             <div className="bg-gray-900 border border-gray-700 rounded-xl overflow-hidden">
           <div className="p-4 border-b border-gray-800">
@@ -340,6 +325,9 @@ export default function Home() {
         {/* ===== 目標 & その他 タブ ===== */}
         {currentTab === "other" && (
           <>
+            {/* 日曜日：週次レビューを最上部に強調表示 */}
+            {isReviewDay && <WeeklyReviewPanel featured={true} />}
+
             {/* ビジョンボード */}
             <VisionBoard />
 
