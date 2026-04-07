@@ -1213,7 +1213,8 @@ export default function TodoList() {
                             const today = new Date().toISOString().split("T")[0];
                             const startTime = todayFormStartTime;
                             const [startHour, startMin] = startTime.split(":").map(Number);
-                            const endMin = startMin + form.estimated_minutes;
+                            const estimatedMinutes = form.estimated_minutes ?? 30;
+                            const endMin = startMin + estimatedMinutes;
                             const endHour = startHour + Math.floor(endMin / 60);
                             const endTime = `${String(endHour % 24).padStart(2, "0")}:${String(endMin % 60).padStart(2, "0")}`;
 
@@ -1229,7 +1230,7 @@ export default function TodoList() {
                               end_time: endTime,
                               title: form.title,
                               type: "task" as const,
-                              duration_minutes: form.estimated_minutes,
+                              duration_minutes: estimatedMinutes,
                               todo_id: newTodo.id,
                             };
 
