@@ -28,7 +28,7 @@ export default function Home() {
   const [dayType, setDayType] = useState<DayType>("weekday");
   const [date, setDate] = useState(getTodayString());
   const [wakeTime, setWakeTime] = useState("06:30");
-  const [currentTab, setCurrentTab] = useState<"todo" | "goals" | "all">("todo");
+  const [currentTab, setCurrentTab] = useState<"todo" | "other">("todo");
 
   // ===== タイマー状態 =====
   const [activeTimer, setActiveTimer] = useState<ActiveTimer | null>(null);
@@ -257,56 +257,31 @@ export default function Home() {
                 : "text-gray-400 hover:text-gray-300"
             }`}
           >
-            TODO & 集中
+            📝 TODO & 集中
           </button>
           <button
-            onClick={() => setCurrentTab("goals")}
+            onClick={() => setCurrentTab("other")}
             className={`px-4 py-2 font-semibold transition-colors ${
-              currentTab === "goals"
+              currentTab === "other"
                 ? "text-blue-400 border-b-2 border-blue-400"
                 : "text-gray-400 hover:text-gray-300"
             }`}
           >
-            目標
-          </button>
-          <button
-            onClick={() => setCurrentTab("all")}
-            className={`px-4 py-2 font-semibold transition-colors ${
-              currentTab === "all"
-                ? "text-blue-400 border-b-2 border-blue-400"
-                : "text-gray-400 hover:text-gray-300"
-            }`}
-          >
-            その他
+            🎯 目標 & その他
           </button>
         </div>
 
-        {/* Today's Mission */}
-        {(currentTab === "todo" || currentTab === "all") && (
-          <TodayMission
-            onStartTimer={handleStartTimer}
-            activeTimerTodoId={activeTimer?.todoId ?? null}
-          />
-        )}
+        {/* ===== TODO & 集中 タブ ===== */}
+        {currentTab === "todo" && (
+          <>
+            {/* Today's Mission */}
+            <TodayMission
+              onStartTimer={handleStartTimer}
+              activeTimerTodoId={activeTimer?.todoId ?? null}
+            />
 
-        {/* デイリールーティン ← スクロール対象（朝・夜） */}
-        {(currentTab === "all") && (
-        <div ref={routineRef}>
-          <DailyRoutinePanel wakeTime={wakeTime} dayType={dayType} />
-        </div>
-        )}
-
-        {/* GoalPanel */}
-        {(currentTab === "goals" || currentTab === "all") && (
-        <GoalPanel />
-        )}
-
-        {/* WeeklyReviewPanel（日曜以外は通常位置） */}
-        {!isReviewDay && (currentTab === "goals" || currentTab === "all") && <WeeklyReviewPanel />}
-
-        {/* 集中を始める - 独立セクション */}
-        {(currentTab === "todo" || currentTab === "all") && (
-        <div className="bg-gray-900 border border-gray-700 rounded-xl overflow-hidden">
+            {/* 集中を始める - 独立セクション */}
+            <div className="bg-gray-900 border border-gray-700 rounded-xl overflow-hidden">
           <div className="p-4 border-b border-gray-800">
             <div className="flex items-center gap-3">
               <span className="text-2xl">⏱</span>
@@ -353,22 +328,48 @@ export default function Home() {
               </div>
             )}
           </div>
-        </div>
+            </div>
+
+            {/* TODO リスト */}
+            <div ref={todoRef}>
+              <TodoList />
+            </div>
+          </>
         )}
 
-        {/* TODO + タイムライン ← スクロール対象（日中） */}
-        {(currentTab === "todo" || currentTab === "all") && (
-        <div ref={todoRef} className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-          <TodoList />
-          {currentTab === "all" && <DailyTimeline date={date} dayType={dayType} wakeTime={wakeTime} />}
-        </div>
+        {/* ===== 目標 & その他 タブ ===== */}
+        {currentTab === "other" && (
+          <>
+            {/* ビジョンボード */}
+            <VisionBoard />
+
+            {/* 使い方ガイド */}
+            <HowToPanel />
+
+            {/* Today's Mission */}
+            <TodayMission
+              onStartTimer={handleStartTimer}
+              activeTimerTodoId={activeTimer?.todoId ?? null}
+            />
+
+            {/* デイリールーティン */}
+            <div ref={routineRef}>
+              <DailyRoutinePanel wakeTime={wakeTime} dayType={dayType} />
+            </div>
+
+            {/* GoalPanel */}
+            <GoalPanel />
+
+            {/* WeeklyReviewPanel */}
+            {!isReviewDay && <WeeklyReviewPanel />}
+
+            {/* 時間記録・統計 */}
+            <TimeStatsPanel />
+
+            {/* 天気 */}
+            <WeatherPanel city="Tokyo" />
+          </>
         )}
-
-        {/* 時間記録・統計 */}
-        {(currentTab === "all") && <TimeStatsPanel />}
-
-        {/* 天気 */}
-        {(currentTab === "all") && <WeatherPanel city="Tokyo" />}
       </div>
     </main>
   );
