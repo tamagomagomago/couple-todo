@@ -316,6 +316,16 @@ export default function Home() {
         {/* ===== 目標 & その他 タブ ===== */}
         {currentTab === "other" && (
           <>
+            {/* DayTypeSelector + 起床時刻 */}
+            <DayTypeSelector
+              value={dayType}
+              onChange={handleDayTypeChange}
+              date={date}
+              onDateChange={setDate}
+              wakeTime={wakeTime}
+              onWakeTimeChange={handleWakeTimeChange}
+            />
+
             {/* 日曜日：週次レビューを最上部に強調表示 */}
             {isReviewDay && <WeeklyReviewPanel featured={true} />}
 
