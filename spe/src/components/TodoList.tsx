@@ -234,7 +234,6 @@ function TodayTodoCard({
               onChange={(e) => setTitleDraft(e.target.value)}
               onBlur={saveTitle}
               onKeyDown={(e) => {
-                if (e.key === "Enter") saveTitle();
                 if (e.key === "Escape") { setEditingTitle(false); setTitleDraft(todo.title); }
               }}
               className="w-full bg-gray-700 text-gray-200 text-sm rounded px-2 py-0.5 focus:outline-none focus:ring-1 focus:ring-blue-500"
