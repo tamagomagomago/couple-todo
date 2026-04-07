@@ -36,6 +36,25 @@ export default function Home() {
   const [selectedFocusTask, setSelectedFocusTask] = useState<Todo | null>(null);
   const [showFocusSelector, setShowFocusSelector] = useState(false);
 
+  // LocalStorage から シングルフォーカスタスクを復元
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("spe-selected-focus-task");
+      if (saved) {
+        const task = JSON.parse(saved) as Todo;
+        setSelectedFocusTask(task);
+      }
+    } catch {}
+
+    // focusTaskChanged イベントをリッスン
+    const handleFocusChanged = (e: Event) => {
+      const event = e as CustomEvent<Todo>;
+      setSelectedFocusTask(event.detail);
+    };
+    window.addEventListener("focusTaskChanged", handleFocusChanged);
+    return () => window.removeEventListener("focusTaskChanged", handleFocusChanged);
+  }, []);
+
   // ref: スクロール対象セクション
   const routineRef = useRef<HTMLDivElement>(null);
   const todoRef = useRef<HTMLDivElement>(null);

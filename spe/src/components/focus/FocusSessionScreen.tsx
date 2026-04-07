@@ -48,6 +48,25 @@ export default function FocusSessionScreen({ userId, onClose }: FocusSessionScre
     fetchModes();
   }, [userId]);
 
+  // LocalStorage からシングルフォーカスタスクを復元
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("spe-selected-focus-task");
+      if (saved) {
+        const task = JSON.parse(saved) as Todo;
+        setSelectedTask(task);
+      }
+    } catch {}
+
+    // focusTaskChanged イベントをリッスン
+    const handleFocusChanged = (e: Event) => {
+      const event = e as CustomEvent<Todo>;
+      setSelectedTask(event.detail);
+    };
+    window.addEventListener("focusTaskChanged", handleFocusChanged);
+    return () => window.removeEventListener("focusTaskChanged", handleFocusChanged);
+  }, []);
+
   // Timer logic
   useEffect(() => {
     if (state === "active" && currentSession) {

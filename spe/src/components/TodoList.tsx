@@ -185,6 +185,7 @@ function TodayTodoCard({
   onSetPreferredTime,
   onSetPriority,
   onEditTitle,
+  onSetFocus,
 }: {
   todo: Todo;
   onToggle: (id: number, completed: boolean) => void;
@@ -192,6 +193,7 @@ function TodayTodoCard({
   onSetPreferredTime: (id: number, t: PreferredTime | null) => void;
   onSetPriority: (id: number, p: number) => void;
   onEditTitle: (id: number, title: string) => void;
+  onSetFocus: (todo: Todo) => void;
 }) {
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState(todo.title);
@@ -304,6 +306,15 @@ function TodayTodoCard({
           )}
         </div>
         <div className="flex flex-col gap-1 shrink-0 items-end">
+          {!todo.is_completed && (
+            <button
+              onClick={() => onSetFocus(todo)}
+              className="text-gray-600 hover:text-blue-400 text-xs"
+              title="シングルフォーカスに設定"
+            >
+              🎯
+            </button>
+          )}
           <button
             onClick={() => onRemove(todo.id)}
             className="text-gray-600 hover:text-gray-400 text-xs"
@@ -384,6 +395,15 @@ export default function TodoList() {
   const [showAiInput, setShowAiInput] = useState(false);
 
   const [loading, setLoading] = useState(false);
+
+  // シングルフォーカスを設定
+  const handleSetFocus = useCallback((todo: Todo) => {
+    try {
+      localStorage.setItem("spe-selected-focus-task", JSON.stringify(todo));
+      // ページ全体に通知
+      window.dispatchEvent(new CustomEvent("focusTaskChanged", { detail: todo }));
+    } catch {}
+  }, []);
 
   const fetchTodos = useCallback(async () => {
     try {
@@ -1309,6 +1329,7 @@ export default function TodoList() {
                                 onSetPreferredTime={handleSetPreferredTime}
                                 onSetPriority={handleSetPriority}
                                 onEditTitle={handleEditTitle}
+                                onSetFocus={handleSetFocus}
                               />
                             </div>
                           );
@@ -1336,6 +1357,7 @@ export default function TodoList() {
                             onSetPreferredTime={handleSetPreferredTime}
                             onSetPriority={handleSetPriority}
                             onEditTitle={handleEditTitle}
+                            onSetFocus={handleSetFocus}
                           />
                         ))}
                     </div>
