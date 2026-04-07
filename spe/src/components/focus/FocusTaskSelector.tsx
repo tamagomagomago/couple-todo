@@ -12,27 +12,24 @@ export default function FocusTaskSelector({
   onTaskSelect,
   selectedTask,
 }: FocusTaskSelectorProps) {
-  const [todayHighPriorityTodos, setTodayHighPriorityTodos] = useState<Todo[]>(
-    []
-  );
+  const [todayTodos, setTodayTodos] = useState<Todo[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchTodos = async () => {
       setLoading(true);
       try {
-        const today = new Date().toISOString().split("T")[0];
         const res = await fetch(`/api/todos?is_today=true`);
         if (!res.ok) throw new Error("Failed to fetch todos");
         const todos = await res.json();
 
-        // 今日のTODOで優先度が「高」（priority === 1）のもの
-        const highPriority = (Array.isArray(todos) ? todos : []).filter(
-          (t: Todo) => t.priority === 1 && !t.is_completed
+        // 今日のTODOで未完了のもの（優先度フィルター無し）
+        const uncompleted = (Array.isArray(todos) ? todos : []).filter(
+          (t: Todo) => !t.is_completed
         );
-        setTodayHighPriorityTodos(highPriority);
+        setTodayTodos(uncompleted);
       } catch (error) {
-        console.error("Failed to fetch today's high-priority todos:", error);
+        console.error("Failed to fetch today's todos:", error);
       } finally {
         setLoading(false);
       }
@@ -48,19 +45,19 @@ export default function FocusTaskSelector({
           🎯 シングルフォーカスタスク
         </h3>
         <p className="text-xs text-gray-500">
-          今日の優先度高タスクの中から1つ選択（オプション）
+          今日のタスクの中から1つ選択（オプション）
         </p>
       </div>
 
       {loading && <p className="text-xs text-gray-400">読込中...</p>}
 
-      {!loading && todayHighPriorityTodos.length === 0 && (
+      {!loading && todayTodos.length === 0 && (
         <p className="text-xs text-gray-500">
-          今日の優先度高タスクがありません
+          今日のタスクがありません
         </p>
       )}
 
-      {!loading && todayHighPriorityTodos.length > 0 && (
+      {!loading && todayTodos.length > 0 && (
         <div className="space-y-2">
           {/* Clear selection button */}
           {selectedTask && (
@@ -73,7 +70,7 @@ export default function FocusTaskSelector({
           )}
 
           {/* Task list */}
-          {todayHighPriorityTodos.map((todo) => (
+          {todayTodos.map((todo) => (
             <button
               key={todo.id}
               onClick={() => onTaskSelect(todo)}
