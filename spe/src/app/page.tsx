@@ -316,6 +316,9 @@ export default function Home() {
         {/* ===== 目標 & その他 タブ ===== */}
         {currentTab === "other" && (
           <>
+            {/* ビジョンボード */}
+            <VisionBoard />
+
             {/* DayTypeSelector + 起床時刻 */}
             <DayTypeSelector
               value={dayType}
@@ -328,9 +331,6 @@ export default function Home() {
 
             {/* 日曜日：週次レビューを最上部に強調表示 */}
             {isReviewDay && <WeeklyReviewPanel featured={true} />}
-
-            {/* ビジョンボード */}
-            <VisionBoard />
 
             {/* 使い方ガイド */}
             <HowToPanel />
