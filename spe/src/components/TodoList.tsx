@@ -1146,19 +1146,48 @@ export default function TodoList({ selectedFocusTask }: TodoListProps = {}) {
                   {/* 今週のTODO */}
                   {weeklyTodos.length > 0 && (
                     <div>
-                      <p className="text-xs text-green-400 font-semibold mb-1.5">📅 今週のTODO</p>
-                      <div className="space-y-2">
-                        {sortTodos(weeklyTodos).map((todo) => (
-                          <MasterTodoCard
-                            key={todo.id}
-                            todo={todo}
-                            onMoveToToday={handleMoveToToday}
-                            onEdit={handleEdit}
-                            onDelete={handleDelete}
-                            isSelectedFocus={selectedFocusTask?.id === todo.id}
+                      {/* ヘッダー + 進捗バー */}
+                      <div className="mb-2">
+                        <p className="text-xs text-green-400 font-semibold mb-1.5">📅 今週のTODO ({weeklyTodos.filter(t => t.is_completed).length}/{weeklyTodos.length})</p>
+                        <div className="w-full h-2 bg-gray-800 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-green-500 transition-all duration-300"
+                            style={{
+                              width: `${weeklyTodos.length > 0 ? (weeklyTodos.filter(t => t.is_completed).length / weeklyTodos.length) * 100 : 0}%`,
+                            }}
                           />
-                        ))}
+                        </div>
                       </div>
+                      {/* 週別に分類表示 */}
+                      {(() => {
+                        const byDueDate: Record<string, typeof weeklyTodos> = {};
+                        weeklyTodos.forEach(t => {
+                          const date = t.due_date || "無期限";
+                          if (!byDueDate[date]) byDueDate[date] = [];
+                          byDueDate[date].push(t);
+                        });
+
+                        const sortedDates = Object.keys(byDueDate).sort();
+                        return sortedDates.map(date => (
+                          <div key={date} className="mb-3">
+                            <p className="text-xs text-gray-500 mb-1">
+                              {date === "無期限" ? "📌 無期限" : `🗓️ ${date}`}
+                            </p>
+                            <div className="space-y-2">
+                              {sortTodos(byDueDate[date]).map((todo) => (
+                                <MasterTodoCard
+                                  key={todo.id}
+                                  todo={todo}
+                                  onMoveToToday={handleMoveToToday}
+                                  onEdit={handleEdit}
+                                  onDelete={handleDelete}
+                                  isSelectedFocus={selectedFocusTask?.id === todo.id}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        ));
+                      })()}
                     </div>
                   )}
 

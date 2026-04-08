@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/decompose-monthly-goals",
       "schedule": "0 8 1 * *"
+    },
+    {
+      "path": "/api/cron/decompose-monthly-todos",
+      "schedule": "0 8 1 * *"
     }
   ]
 }

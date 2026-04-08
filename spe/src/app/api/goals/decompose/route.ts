@@ -24,72 +24,38 @@ export async function POST(req: Request) {
     const now = new Date();
     const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 
-    // 既存タスクを削除
-    await supabase.from("weekly_tasks").delete().eq("goal_id", goal_id);
-
-    // 新しいタスクを作成
-    const weeklyTasks = [];
+    // 月別TODO を1件生成（マスターリストに追加）
+    // これを毎月1日に自動分解して4つの週別TODOを作成
     const monthlyTodos = [];
 
-    for (const weeklyBreakdown of decomposition.weeklyBreakdowns) {
-      for (const task of weeklyBreakdown.tasks) {
-        const { data: insertedTask, error: taskError } = await supabase
-          .from("weekly_tasks")
-          .insert({
-            goal_id,
-            user_id: "default_user",
-            week_number: weeklyBreakdown.week,
-            month: `${monthStr}-01`,
-            category: task.category,
-            allocated_minutes: task.allocated_minutes,
-            actual_minutes: 0,
-          })
-          .select();
+    const monthlyTodoTitle = `${goal.title}`;
+    const subtasksList = decomposition.weeklyBreakdowns
+      .flatMap((w) => w.tasks.flatMap((t) => t.subtasks))
+      .join(", ");
 
-        if (taskError) throw taskError;
+    const breakdownConfig = (goal.breakdown_config as Record<string, number>) || {};
+    const totalHours = Object.values(breakdownConfig).reduce((a: number, b: number) => a + b, 0);
 
-        // サブタスクを作成
-        if (insertedTask && insertedTask[0]) {
-          const subtasks = task.subtasks.map((name) => ({
-            weekly_task_id: insertedTask[0].id,
-            name,
-            estimated_minutes: Math.round(
-              task.allocated_minutes / task.subtasks.length
-            ),
-            actual_minutes: 0,
-            completed: false,
-          }));
+    const { data: monthlyTodoData, error: monthlyTodoError } = await supabase
+      .from("todos")
+      .insert({
+        title: monthlyTodoTitle,
+        description: `【月別タスク】\n目標: ${goal.title}\n目標値: ${goal.targetValue}${goal.unit}\n\nカテゴリ別配分:\n${Object.entries(breakdownConfig)
+          .map(([cat, hours]) => `- ${cat}: ${hours}時間/${goal.unit}`)
+          .join("\n")}\n\nタスク詳細:\n${subtasksList}\n\n[Goal ID: ${goal_id}]\n[月別タスク: 毎月1日に週別に分解されます]`,
+        priority: 2,
+        estimated_minutes: totalHours * (goal.targetValue || 1) * 60,
+        category: "engineer",
+        is_today: false,
+        is_monthly_base: true, // 月別タスクフラグ
+        preferred_time: null,
+        due_date: null, // 毎月1日のcronで週別に分配されます
+      })
+      .select();
 
-          const { error: subtaskError } = await supabase
-            .from("weekly_subtasks")
-            .insert(subtasks);
-
-          if (subtaskError) throw subtaskError;
-        }
-
-        weeklyTasks.push(insertedTask?.[0]);
-
-        // Monthly TODO を生成（マスターリストに追加）
-        const monthlyTodoTitle = `${goal.title} - ${task.category} (W${weeklyBreakdown.week})`;
-        const { data: todoData, error: todoError } = await supabase
-          .from("todos")
-          .insert({
-            title: monthlyTodoTitle,
-            description: `目標: ${goal.title}\nカテゴリ: ${task.category}\nタスク: ${task.subtasks.join(", ")}\n[Goal ID: ${goal_id}]`,
-            priority: 3,
-            estimated_minutes: task.allocated_minutes,
-            category: task.category,
-            is_today: false,
-            preferred_time: null,
-            due_date: null, // マスターリスト用（期限は後から設定）
-          })
-          .select();
-
-        if (todoError) throw todoError;
-        if (todoData && todoData[0]) {
-          monthlyTodos.push(todoData[0]);
-        }
-      }
+    if (monthlyTodoError) throw monthlyTodoError;
+    if (monthlyTodoData && monthlyTodoData[0]) {
+      monthlyTodos.push(monthlyTodoData[0]);
     }
 
     // goal テーブルを更新
@@ -104,7 +70,6 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       success: true,
-      weeklyTasks,
       monthlyTodos,
       summary: decomposition.summary,
     });

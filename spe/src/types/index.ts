@@ -45,6 +45,9 @@ export interface Todo {
   due_date?: string | null;
   goal_id?: number | null;
   completed_at?: string | null;
+  is_monthly_base?: boolean; // 月別ベースTODO（自動分解対象）
+  actual_minutes?: number; // 実際に使用した時間（進捗管理用）
+  decomposed_at?: string | null; // 分解タイムスタンプ
   created_at: string;
   updated_at: string;
 }
