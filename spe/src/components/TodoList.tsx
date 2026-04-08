@@ -53,24 +53,45 @@ function getRoutineTemplates(): RoutineTemplate[] {
   const isWeekend = [0, 6].includes(new Date().getDay());
   const hasDmmCamp = today <= DMM_CAMP_END;
 
+  // 朝ルーティン
+  const morningRoutines = [
+    { title: "スマホアラームで即座にベッドを出る", category: "personal", estimated_minutes: 1, preferred_time: "morning", note: "6:30起床 5秒以内" },
+    { title: "着替える", category: "personal", estimated_minutes: 5, preferred_time: "morning", note: "起床直後" },
+    { title: "冷たい水をコップ1杯飲む", category: "personal", estimated_minutes: 2, preferred_time: "morning", note: "スマホの上の水" },
+  ];
+
+  // 夜ルーティン
+  const eveningRoutines = [
+    { title: "シャワー浴びる", category: "personal", estimated_minutes: 15, preferred_time: "evening", note: "21:00" },
+    { title: "スマホを別室に置く", category: "personal", estimated_minutes: 3, preferred_time: "evening", note: "22:00 スマホの上に水を置く" },
+    { title: "部屋を薄暗くする", category: "personal", estimated_minutes: 2, preferred_time: "evening", note: "22:00" },
+    { title: "瞑想・日記・読書", category: "personal", estimated_minutes: 30, preferred_time: "evening", note: "22:00〜22:30" },
+    { title: "ベッドに入る", category: "personal", estimated_minutes: 5, preferred_time: "evening", note: "23:00" },
+  ];
+
   if (isWeekend) {
     return [
+      ...morningRoutines,
       { title: "Duolingo & Speak", category: "english", estimated_minutes: 15, preferred_time: "morning", note: "起床後15分" },
       { title: "VFX作業", category: "vfx", estimated_minutes: 120, preferred_time: "morning", note: "朝2時間" },
-      { title: "飯・休憩", category: "personal", estimated_minutes: 30, preferred_time: "evening", note: "19:00〜19:30" },
-      { title: "技術士", category: "engineer", estimated_minutes: 120, preferred_time: "evening", note: "19:30〜21:30" },
+      { title: "飯・休憩", category: "personal", estimated_minutes: 30, preferred_time: "afternoon", note: "19:00〜19:30" },
+      { title: "技術士", category: "engineer", estimated_minutes: 120, preferred_time: "afternoon", note: "19:30〜21:30" },
       { title: "VFX", category: "vfx", estimated_minutes: 30, preferred_time: "evening", note: "21:30〜22:00" },
+      ...eveningRoutines,
     ];
   }
+
   return [
+    ...morningRoutines,
     { title: "Duolingo & Speak", category: "english", estimated_minutes: 15, preferred_time: "morning", note: "起床後15分" },
     { title: "VFX作業", category: "vfx", estimated_minutes: 120, preferred_time: "morning", note: "朝2時間" },
     { title: "技術士（通勤）", category: "engineer", estimated_minutes: 60, preferred_time: "morning", note: "通勤往復1時間" },
-    { title: "飯・休憩", category: "personal", estimated_minutes: 30, preferred_time: "evening", note: "19:00〜19:30" },
+    { title: "飯・休憩", category: "personal", estimated_minutes: 30, preferred_time: "afternoon", note: "19:00〜19:30" },
     hasDmmCamp
-      ? { title: "DMMキャンプ", category: "english", estimated_minutes: 120, preferred_time: "evening", note: "19:30〜21:30（4/20まで）" }
-      : { title: "技術士", category: "engineer", estimated_minutes: 120, preferred_time: "evening", note: "19:30〜21:30" },
+      ? { title: "DMMキャンプ", category: "english", estimated_minutes: 120, preferred_time: "afternoon", note: "19:30〜21:30（4/20まで）" }
+      : { title: "技術士", category: "engineer", estimated_minutes: 120, preferred_time: "afternoon", note: "19:30〜21:30" },
     { title: "技術士30分", category: "engineer", estimated_minutes: 30, preferred_time: "evening", note: "21:30〜22:00" },
+    ...eveningRoutines,
   ];
 }
 
@@ -310,6 +331,23 @@ function TodayTodoCard({
                 ))}
               </div>
 
+              {/* 朝昼夜選択 */}
+              <div className="flex items-center gap-1 mt-1.5">
+                <span className="text-gray-600 text-xs shrink-0">時間帯:</span>
+                {TIME_PREF_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => onSetPreferredTime(todo.id, todo.preferred_time === opt.value ? null : opt.value)}
+                    className={`text-xs px-2 py-0.5 rounded border transition-all ${
+                      todo.preferred_time === opt.value
+                        ? "border-blue-500 bg-blue-900/50 text-blue-300"
+                        : "border-gray-700 text-gray-600 hover:border-gray-500 hover:text-gray-400"
+                    }`}
+                  >
+                    {opt.emoji} {opt.label}
+                  </button>
+                ))}
+              </div>
             </>
           )}
         </div>

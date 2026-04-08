@@ -28,7 +28,7 @@ export default function Home() {
   const [dayType, setDayType] = useState<DayType>("weekday");
   const [date, setDate] = useState(getTodayString());
   const [wakeTime, setWakeTime] = useState("06:30");
-  const [currentTab, setCurrentTab] = useState<"todo" | "other">("todo");
+  const [currentTab, setCurrentTab] = useState<"todo" | "other">("other");
 
   // ===== タイマー状態 =====
   const [activeTimer, setActiveTimer] = useState<ActiveTimer | null>(null);
