@@ -143,12 +143,16 @@ function MasterTodoCard({
   onMoveToToday,
   onEdit,
   onDelete,
+  onDecompose,
+  isDecomposing,
   isSelectedFocus,
 }: {
   todo: Todo;
   onMoveToToday: (id: number) => void;
   onEdit: (todo: Todo) => void;
   onDelete: (id: number) => void;
+  onDecompose?: (id: number) => void;
+  isDecomposing?: boolean;
   isSelectedFocus?: boolean;
 }) {
   const [isChecked, setIsChecked] = useState(false);
@@ -216,7 +220,17 @@ function MasterTodoCard({
             />
             <span className="text-xs text-blue-300">今日へ</span>
           </label>
-          <div className="flex gap-1 justify-end">
+          <div className="flex gap-1 justify-end flex-wrap">
+            {todo.is_monthly_base && onDecompose && (
+              <button
+                onClick={() => onDecompose(todo.id)}
+                disabled={isDecomposing}
+                className="text-gray-500 hover:text-amber-400 text-xs disabled:opacity-50"
+                title="4つの週別タスクに分解"
+              >
+                {isDecomposing ? "分解中..." : "分解"}
+              </button>
+            )}
             <button
               onClick={() => onEdit(todo)}
               className="text-gray-500 hover:text-blue-400 text-xs"
@@ -478,6 +492,7 @@ export default function TodoList({ selectedFocusTask }: TodoListProps = {}) {
   const [showDescription, setShowDescription] = useState(false);
 
   const [loading, setLoading] = useState(false);
+  const [decomposingId, setDecomposingId] = useState<number | null>(null);
 
   // ドラッグアンドドロップ状態
   const [draggedTodoId, setDraggedTodoId] = useState<number | null>(null);
@@ -803,6 +818,29 @@ export default function TodoList({ selectedFocusTask }: TodoListProps = {}) {
       });
     }
     await fetchTodos();
+  };
+
+  // 月別TODOを週別に分解
+  const handleDecomposeMonthly = async (monthlyTodoId: number) => {
+    setDecomposingId(monthlyTodoId);
+    try {
+      const res = await fetch("/api/todos/decompose", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ todo_id: monthlyTodoId }),
+      });
+      if (res.ok) {
+        alert("✅ 4つの週別TODOに分解しました！");
+        await fetchTodos();
+      } else {
+        const err = await res.json();
+        alert(`分解に失敗しました: ${err.error}`);
+      }
+    } catch (e) {
+      alert(`エラー: ${String(e)}`);
+    } finally {
+      setDecomposingId(null);
+    }
   };
 
   // 今日のTODO統計（今日 completed_at があるものだけ）
@@ -1181,6 +1219,8 @@ export default function TodoList({ selectedFocusTask }: TodoListProps = {}) {
                                   onMoveToToday={handleMoveToToday}
                                   onEdit={handleEdit}
                                   onDelete={handleDelete}
+                                  onDecompose={handleDecomposeMonthly}
+                                  isDecomposing={decomposingId === todo.id}
                                   isSelectedFocus={selectedFocusTask?.id === todo.id}
                                 />
                               ))}
@@ -1203,6 +1243,8 @@ export default function TodoList({ selectedFocusTask }: TodoListProps = {}) {
                             onMoveToToday={handleMoveToToday}
                             onEdit={handleEdit}
                             onDelete={handleDelete}
+                            onDecompose={handleDecomposeMonthly}
+                            isDecomposing={decomposingId === todo.id}
                             isSelectedFocus={selectedFocusTask?.id === todo.id}
                           />
                         ))}
