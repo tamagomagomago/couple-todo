@@ -97,7 +97,6 @@ const EMPTY_FORM: CreateGoalInput = {
   unit: "",
   start_date: new Date().toISOString().split("T")[0],
   end_date: "",
-  parent_id: undefined,
 };
 
 // ----------------------
@@ -603,6 +602,10 @@ export default function GoalPanel() {
   const [expandedDecomposer, setExpandedDecomposer] = useState<number | null>(null);
   const [editId, setEditId] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
+  const [editingCategoryCustom, setEditingCategoryCustom] = useState(false);
+  const [breakdownPrompt, setBreakdownPrompt] = useState("");
+  const [showBreakdownPrompt, setShowBreakdownPrompt] = useState(false);
+  const [breakdownGoalForPrompt, setBreakdownGoalForPrompt] = useState<Goal | null>(null);
 
   // AI breakdown state
   const [breakdownLoading, setBreakdownLoading] = useState(false);
@@ -654,7 +657,6 @@ export default function GoalPanel() {
       unit: goal.unit ?? "",
       start_date: goal.start_date,
       end_date: goal.end_date,
-      parent_id: goal.parent_id ?? undefined,
     });
     setShowForm(true);
   };
@@ -665,13 +667,26 @@ export default function GoalPanel() {
     await fetchGoals();
   };
 
-  const handleBreakdown = async (goal: Goal) => {
+  const handleBreakdown = (goal: Goal) => {
+    // プロンプト入力画面を表示
+    setShowBreakdownPrompt(true);
+    setBreakdownGoalForPrompt(goal);
+    setBreakdownPrompt(
+      `${goal.title}を以下の期間で達成するために必要な\n月次目標と週次目標、そしてTODOを提案してください。\n\n期間: ${goal.start_date} ～ ${goal.end_date}\n目標: ${goal.target_value ?? "未設定"}${goal.unit ?? ""}`
+    );
+  };
+
+  const handleBreakdownWithPrompt = async () => {
+    if (!breakdownGoalForPrompt) return;
     setBreakdownLoading(true);
     setBreakdownResult(null);
-    setBreakdownGoalId(goal.id);
+    setBreakdownGoalId(breakdownGoalForPrompt.id);
+    setShowBreakdownPrompt(false);
     try {
-      const res = await fetch(`/api/goals/${goal.id}/breakdown`, {
+      const res = await fetch(`/api/goals/${breakdownGoalForPrompt.id}/breakdown`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ custom_prompt: breakdownPrompt }),
       });
       if (res.ok) {
         const data = await res.json();
@@ -747,6 +762,44 @@ export default function GoalPanel() {
         </div>
       )}
 
+      {/* AI分解プロンプト入力モーダル */}
+      {showBreakdownPrompt && breakdownGoalForPrompt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="bg-gray-900 border border-gray-700 rounded-xl max-w-2xl w-full p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-white font-semibold">🤖 AI分解のプロンプト</h3>
+              <button
+                onClick={() => setShowBreakdownPrompt(false)}
+                className="text-gray-400 hover:text-white text-xl"
+              >
+                ×
+              </button>
+            </div>
+            <textarea
+              value={breakdownPrompt}
+              onChange={(e) => setBreakdownPrompt(e.target.value)}
+              rows={8}
+              className="w-full bg-gray-800 text-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-purple-500 resize-none border border-gray-700 mb-3"
+              placeholder="AIへのプロンプトを入力してください..."
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={handleBreakdownWithPrompt}
+                className="flex-1 py-2 bg-purple-700 hover:bg-purple-600 text-white rounded-lg text-sm font-medium transition-colors"
+              >
+                ✨ 分解を実行
+              </button>
+              <button
+                onClick={() => setShowBreakdownPrompt(false)}
+                className="flex-1 py-2 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg text-sm font-medium transition-colors"
+              >
+                キャンセル
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* AI分解結果モーダル */}
       {breakdownResult && breakdownGoalId && (
         <BreakdownModal
@@ -802,27 +855,47 @@ export default function GoalPanel() {
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="text-xs text-gray-400 mb-1 block">カテゴリ</label>
-                  <select
-                    value={form.category}
-                    onChange={(e) =>
-                      setForm({ ...form, category: e.target.value as GoalCategory })
-                    }
-                    className="w-full bg-gray-700 text-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none"
+                  {editingCategoryCustom ? (
+                    <input
+                      type="text"
+                      value={form.category}
+                      onChange={(e) => setForm({ ...form, category: e.target.value })}
+                      placeholder="カテゴリ名を入力"
+                      className="w-full bg-gray-700 text-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    />
+                  ) : (
+                    <select
+                      value={form.category}
+                      onChange={(e) =>
+                        setForm({ ...form, category: e.target.value })
+                      }
+                      className="w-full bg-gray-700 text-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none"
+                    >
+                      {(
+                        [
+                          "fitness",
+                          "investment",
+                          "english",
+                          "vfx",
+                          "personal",
+                        ] as GoalCategory[]
+                      ).map((c) => (
+                        <option key={c} value={c}>
+                          {CATEGORY_EMOJI[c] ?? "📌"} {CATEGORY_LABEL[c]}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingCategoryCustom(!editingCategoryCustom);
+                      if (!editingCategoryCustom) setForm({ ...form, category: "" });
+                    }}
+                    className="text-xs text-gray-500 hover:text-gray-300 mt-1"
                   >
-                    {(
-                      [
-                        "fitness",
-                        "investment",
-                        "english",
-                        "vfx",
-                        "personal",
-                      ] as GoalCategory[]
-                    ).map((c) => (
-                      <option key={c} value={c}>
-                        {CATEGORY_EMOJI[c]} {CATEGORY_LABEL[c]}
-                      </option>
-                    ))}
-                  </select>
+                    {editingCategoryCustom ? "プリセットに戻す" : "カスタム入力"}
+                  </button>
                 </div>
                 <div>
                   <label className="text-xs text-gray-400 mb-1 block">期間タイプ</label>
@@ -840,37 +913,6 @@ export default function GoalPanel() {
                 </div>
               </div>
 
-              {/* 親目標セレクター */}
-              {(form.period_type === "monthly" || form.period_type === "weekly") && (
-                <div>
-                  <label className="text-xs text-gray-400 mb-1 block">
-                    親目標（OKR）
-                  </label>
-                  <select
-                    value={form.parent_id ?? ""}
-                    onChange={(e) =>
-                      setForm({
-                        ...form,
-                        parent_id: e.target.value ? Number(e.target.value) : undefined,
-                      })
-                    }
-                    className="w-full bg-gray-700 text-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none"
-                  >
-                    <option value="">なし</option>
-                    {parentCandidates
-                      .filter((g) =>
-                        form.period_type === "monthly"
-                          ? g.period_type === "annual"
-                          : g.period_type === "monthly"
-                      )
-                      .map((g) => (
-                        <option key={g.id} value={g.id}>
-                          [{PERIOD_LABEL[g.period_type]}] {g.title}
-                        </option>
-                      ))}
-                  </select>
-                </div>
-              )}
 
               <div className="grid grid-cols-3 gap-2">
                 <div>

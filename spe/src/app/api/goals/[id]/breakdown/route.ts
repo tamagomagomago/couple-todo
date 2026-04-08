@@ -81,7 +81,6 @@ export async function POST(
           unit: mg.unit || null,
           start_date: mg.start_date,
           end_date: mg.end_date,
-          parent_id: goalId,
         }).select().single();
         if (mgError) {
           console.error("[/api/goals/:id/breakdown] Monthly goal save error:", mgError);
@@ -93,10 +92,6 @@ export async function POST(
       // 週次目標を保存（月次目標に均等に紐付け）
       for (let i = 0; i < body.weekly_goals.length; i++) {
         const wg = body.weekly_goals[i];
-        // 月次目標のIDを順番に割り当て（なければ null）
-        const parentMonthlyId = savedMonthlyIds.length > 0
-          ? savedMonthlyIds[i % savedMonthlyIds.length]
-          : null;
         const { error: wgError } = await supabase.from("goals").insert({
           title: wg.title,
           description: wg.description || null,
@@ -107,7 +102,6 @@ export async function POST(
           unit: wg.unit || null,
           start_date: wg.start_date,
           end_date: wg.end_date,
-          parent_id: parentMonthlyId,
         });
         if (wgError) {
           console.error("[/api/goals/:id/breakdown] Weekly goal save error:", wgError);
@@ -137,7 +131,19 @@ export async function POST(
     const today = new Date().toISOString().split("T")[0];
     const profileContext = buildProfileContext();
 
-    const prompt = `
+    // リクエストボディから custom_prompt を取得
+    let customPrompt = "";
+    try {
+      const bodyText = await request.text();
+      if (bodyText) {
+        const body = JSON.parse(bodyText);
+        customPrompt = body.custom_prompt || "";
+      }
+    } catch {
+      // JSON解析失敗時は無視
+    }
+
+    const prompt = customPrompt || `
 ${profileContext}
 
 ---

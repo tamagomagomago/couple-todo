@@ -90,7 +90,6 @@ export interface Goal {
   start_date: string;
   end_date: string;
   is_achieved: boolean;
-  parent_id?: number | null;
   breakdown_config?: Record<string, number> | null;
   decomposed_at?: string | null;
   created_at: string;
@@ -100,14 +99,13 @@ export interface Goal {
 export interface CreateGoalInput {
   title: string;
   description?: string;
-  category: GoalCategory;
+  category: GoalCategory | string; // カスタムカテゴリ対応
   period_type: PeriodType;
   target_value?: number;
   current_value?: number;
   unit?: string;
   start_date: string;
   end_date: string;
-  parent_id?: number;
 }
 
 export interface UpdateGoalInput extends Partial<CreateGoalInput> {
