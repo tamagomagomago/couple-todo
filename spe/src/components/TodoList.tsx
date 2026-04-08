@@ -72,27 +72,27 @@ function getRoutineTemplates(): RoutineTemplate[] {
   if (isWeekend) {
     return [
       ...morningRoutines,
-      { title: "Duolingo & Speak", category: "english", estimated_minutes: 15, preferred_time: "morning", note: "起床後15分" },
-      { title: "VFX作業", category: "vfx", estimated_minutes: 120, preferred_time: "morning", note: "朝2時間" },
-      { title: "飯・休憩", category: "personal", estimated_minutes: 30, preferred_time: "afternoon", note: "19:00〜19:30" },
-      { title: "技術士", category: "engineer", estimated_minutes: 120, preferred_time: "afternoon", note: "19:30〜21:30" },
-      { title: "VFX", category: "vfx", estimated_minutes: 30, preferred_time: "evening", note: "21:30〜22:00" },
+      { title: "Duolingo & Speak", category: "english", estimated_minutes: 15, preferred_time: "morning" as const, note: "起床後15分" },
+      { title: "VFX作業", category: "vfx", estimated_minutes: 120, preferred_time: "morning" as const, note: "朝2時間" },
+      { title: "飯・休憩", category: "personal", estimated_minutes: 30, preferred_time: "afternoon" as const, note: "19:00〜19:30" },
+      { title: "技術士", category: "engineer", estimated_minutes: 120, preferred_time: "afternoon" as const, note: "19:30〜21:30" },
+      { title: "VFX", category: "vfx", estimated_minutes: 30, preferred_time: "evening" as const, note: "21:30〜22:00" },
       ...eveningRoutines,
-    ];
+    ] satisfies RoutineTemplate[];
   }
 
   return [
     ...morningRoutines,
-    { title: "Duolingo & Speak", category: "english", estimated_minutes: 15, preferred_time: "morning", note: "起床後15分" },
-    { title: "VFX作業", category: "vfx", estimated_minutes: 120, preferred_time: "morning", note: "朝2時間" },
-    { title: "技術士（通勤）", category: "engineer", estimated_minutes: 60, preferred_time: "morning", note: "通勤往復1時間" },
-    { title: "飯・休憩", category: "personal", estimated_minutes: 30, preferred_time: "afternoon", note: "19:00〜19:30" },
+    { title: "Duolingo & Speak", category: "english", estimated_minutes: 15, preferred_time: "morning" as const, note: "起床後15分" },
+    { title: "VFX作業", category: "vfx", estimated_minutes: 120, preferred_time: "morning" as const, note: "朝2時間" },
+    { title: "技術士（通勤）", category: "engineer", estimated_minutes: 60, preferred_time: "morning" as const, note: "通勤往復1時間" },
+    { title: "飯・休憩", category: "personal", estimated_minutes: 30, preferred_time: "afternoon" as const, note: "19:00〜19:30" },
     hasDmmCamp
-      ? { title: "DMMキャンプ", category: "english", estimated_minutes: 120, preferred_time: "afternoon", note: "19:30〜21:30（4/20まで）" }
-      : { title: "技術士", category: "engineer", estimated_minutes: 120, preferred_time: "afternoon", note: "19:30〜21:30" },
-    { title: "技術士30分", category: "engineer", estimated_minutes: 30, preferred_time: "evening", note: "21:30〜22:00" },
+      ? { title: "DMMキャンプ", category: "english", estimated_minutes: 120, preferred_time: "afternoon" as const, note: "19:30〜21:30（4/20まで）" }
+      : { title: "技術士", category: "engineer", estimated_minutes: 120, preferred_time: "afternoon" as const, note: "19:30〜21:30" },
+    { title: "技術士30分", category: "engineer", estimated_minutes: 30, preferred_time: "evening" as const, note: "21:30〜22:00" },
     ...eveningRoutines,
-  ];
+  ] satisfies RoutineTemplate[];
 }
 
 function getCatEmoji(cat: string): string {
