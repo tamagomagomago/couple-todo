@@ -20,6 +20,7 @@ export default function ShoppingListPanel() {
   const [showCustomCat, setShowCustomCat] = useState(false);
   const [sortBy, setSortBy] = useState<"category" | "date">("category");
   const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(true);
 
   // 初期読み込み
   useEffect(() => {
@@ -115,11 +116,19 @@ export default function ShoppingListPanel() {
 
   return (
     <div className="bg-gray-900 border border-gray-700 rounded-xl overflow-hidden">
-      <div className="px-4 py-3 border-b border-gray-800">
-        <div className="flex items-center gap-2 mb-3">
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-800 transition-colors border-b border-gray-800"
+      >
+        <div className="flex items-center gap-2">
           <span className="text-lg">🛒</span>
           <span className="font-semibold text-gray-200">買うものリスト</span>
         </div>
+        <span className="text-gray-400 text-sm">{open ? "▲" : "▼"}</span>
+      </button>
+
+      {open && (
+      <div className="px-4 py-3 border-b border-gray-800">
 
         {/* 追加フォーム */}
         <form onSubmit={handleAddItem} className="space-y-2 bg-gray-800 p-3 rounded-lg">
@@ -130,7 +139,8 @@ export default function ShoppingListPanel() {
             className="w-full bg-gray-700 text-gray-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
 
-          <div className="flex gap-2">
+          {/* カテゴリ選択ボタン */}
+          <div className="flex gap-1 flex-wrap">
             {showCustomCat ? (
               <>
                 <input
@@ -152,21 +162,24 @@ export default function ShoppingListPanel() {
               </>
             ) : (
               <>
-                <select
-                  value={newCategory}
-                  onChange={(e) => setNewCategory(e.target.value)}
-                  className="flex-1 bg-gray-700 text-gray-200 rounded px-2 py-1.5 text-xs focus:outline-none"
-                >
-                  {DEFAULT_CATEGORIES.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                </select>
+                {DEFAULT_CATEGORIES.map((cat) => (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setNewCategory(cat)}
+                    className={`text-xs px-2 py-1 rounded border transition-colors ${
+                      newCategory === cat
+                        ? "bg-blue-900/60 text-blue-300 border-blue-600"
+                        : "bg-gray-800 text-gray-400 border-gray-700 hover:bg-gray-700"
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
                 <button
                   type="button"
                   onClick={() => setShowCustomCat(true)}
-                  className="text-xs text-gray-500 hover:text-gray-300 px-2 py-1.5"
+                  className="text-xs text-gray-500 hover:text-gray-300 px-2 py-1"
                 >
                   +新規
                 </button>
@@ -208,52 +221,53 @@ export default function ShoppingListPanel() {
         </button>
       </div>
 
-      {/* リスト表示 */}
-      <div className="px-4 py-3 space-y-3 max-h-96 overflow-y-auto">
-        {allCategories.length === 0 ? (
-          <p className="text-gray-500 text-xs text-center py-4">
-            買うものがありません
-          </p>
-        ) : (
-          allCategories.map((category) => (
-            <div key={category}>
-              <p className="text-xs text-gray-500 font-semibold mb-1.5 uppercase tracking-wider">
-                {category}
-              </p>
-              <div className="space-y-1">
-                {groupedItems[category].map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center gap-2 bg-gray-800 p-2 rounded group hover:bg-gray-750 transition-colors"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={item.is_completed}
-                      onChange={() => handleComplete(item.id)}
-                      className="w-4 h-4 rounded accent-green-500 cursor-pointer"
-                    />
-                    <span
-                      className={`text-sm flex-1 ${
-                        item.is_completed
-                          ? "line-through text-gray-600"
-                          : "text-gray-300"
-                      }`}
+        {/* リスト表示 */}
+        <div className="px-4 py-3 space-y-3 max-h-96 overflow-y-auto">
+          {allCategories.length === 0 ? (
+            <p className="text-gray-500 text-xs text-center py-4">
+              買うものがありません
+            </p>
+          ) : (
+            allCategories.map((category) => (
+              <div key={category}>
+                <p className="text-xs text-gray-500 font-semibold mb-1.5 uppercase tracking-wider">
+                  {category}
+                </p>
+                <div className="space-y-1">
+                  {groupedItems[category].map((item) => (
+                    <div
+                      key={item.id}
+                      className="flex items-center gap-2 bg-gray-800 p-2 rounded group hover:bg-gray-750 transition-colors"
                     >
-                      {item.title}
-                    </span>
-                    <button
-                      onClick={() => handleDelete(item.id)}
-                      className="text-gray-600 hover:text-red-400 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ))}
+                      <input
+                        type="checkbox"
+                        checked={item.is_completed}
+                        onChange={() => handleComplete(item.id)}
+                        className="w-4 h-4 rounded accent-green-500 cursor-pointer"
+                      />
+                      <span
+                        className={`text-sm flex-1 ${
+                          item.is_completed
+                            ? "line-through text-gray-600"
+                            : "text-gray-300"
+                        }`}
+                      >
+                        {item.title}
+                      </span>
+                      <button
+                        onClick={() => handleDelete(item.id)}
+                        className="text-gray-600 hover:text-red-400 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))
-        )}
-      </div>
+            ))
+          )}
+        </div>
+      )}
     </div>
   );
 }

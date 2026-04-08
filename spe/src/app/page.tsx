@@ -350,11 +350,11 @@ export default function Home() {
               <DailyRoutinePanel wakeTime={wakeTime} dayType={dayType} />
             </div>
 
-            {/* ShoppingListPanel */}
-            <ShoppingListPanel />
-
             {/* GoalPanel */}
             <GoalPanel />
+
+            {/* ShoppingListPanel */}
+            <ShoppingListPanel />
 
             {/* WeeklyReviewPanel */}
             {!isReviewDay && <WeeklyReviewPanel />}
