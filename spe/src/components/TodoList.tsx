@@ -874,6 +874,17 @@ export default function TodoList({ selectedFocusTask }: TodoListProps = {}) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ is_today: false }),
     });
+    // フォーカス中のタスクが削除された場合はフォーカスも解除
+    try {
+      const saved = localStorage.getItem("spe-selected-focus-task");
+      if (saved) {
+        const focused = JSON.parse(saved);
+        if (focused?.id === id) {
+          localStorage.removeItem("spe-selected-focus-task");
+          window.dispatchEvent(new CustomEvent("focusTaskChanged", { detail: null }));
+        }
+      }
+    } catch {}
     await fetchTodos();
   };
 
