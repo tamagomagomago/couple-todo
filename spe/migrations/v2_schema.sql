@@ -60,7 +60,7 @@ CREATE TABLE IF NOT EXISTS focus_sessions_v2 (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_focus_v2_started_at ON focus_sessions_v2(DATE(started_at));
+CREATE INDEX IF NOT EXISTS idx_focus_v2_started_at ON focus_sessions_v2(started_at);
 CREATE INDEX IF NOT EXISTS idx_focus_v2_user_id ON focus_sessions_v2(user_id);
 
 -- weekly_reviews_v2
